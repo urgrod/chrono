@@ -47,6 +47,21 @@ MainWindow::MainWindow() : QMainWindow()
     connect(importPDFRACE2, SIGNAL(clicked(bool)), this, SLOT(showDirectoryMenu()));
     connect(importPDFRACE2, SIGNAL(clicked(bool)), this, SLOT(populateArray()));
 
+    connect(colorBestTimeButton, SIGNAL(clicked(bool)), this, SLOT(selectColorBestTime()));
+    connect(colorIdealButton, SIGNAL(clicked(bool)), this, SLOT(selectColorIdealTime()));
+    connect(colorMoyenneButton, SIGNAL(clicked(bool)), this, SLOT(selectColorAverageTime()));
+    connect(colorOutTimeButton, SIGNAL(clicked(bool)), this, SLOT(selectColorOutTime()));
+
+    connect(saveSettingsButton, SIGNAL(clicked(bool)), this, SLOT(saveSettings()));
+    connect(loadSettingsButton, SIGNAL(clicked(bool)), this, SLOT(loadSettings()));
+
+    if(manRadio->isChecked())
+    {
+        connect(tableRACE2, SIGNAL(cellDoubleClicked(int,int)), this, SLOT(openEditWindow(int,int)));
+    }
+
+    connect(generatePDFRACE2, SIGNAL(clicked(bool)), this, SLOT(generateFile()));
+
 }
 
 MainWindow::~MainWindow()
@@ -355,8 +370,15 @@ QLayout *MainWindow::createViewParametre()
 {
     QHBoxLayout *qboxLayout1 = new QHBoxLayout;
     QHBoxLayout *qboxLayout2 = new QHBoxLayout;
+    QHBoxLayout *qboxLayout5 = new QHBoxLayout;
+    QHBoxLayout *qboxLayout6 = new QHBoxLayout;
+    QHBoxLayout *qboxLayout11 = new QHBoxLayout;
     QVBoxLayout *qboxLayout3 = new QVBoxLayout;
     QVBoxLayout *qboxLayout4 = new QVBoxLayout;
+    QVBoxLayout *qboxLayout7 = new QVBoxLayout;
+    QVBoxLayout *qboxLayout8 = new QVBoxLayout;
+    QVBoxLayout *qboxLayout9 = new QVBoxLayout;
+
 
 
     QVBoxLayout *qboxLayout10 = new QVBoxLayout;
@@ -409,11 +431,49 @@ QLayout *MainWindow::createViewParametre()
     qboxLayout2->addWidget(ddRadio);
     qboxLayout2->addWidget(manRadio);
 
+    colorBestTime = new QColor(Qt::green);
+    colorBestTimeLabel = new QLabel("Best time/sector color");
+    colorBestTimeButton = new QPushButton("Best time/sector color select");
+    colorIdeal = new QColor(Qt::magenta);
+    colorIdealLabel = new QLabel("Ideal time color");
+    colorIdealButton = new QPushButton("Ideal time color select");
+
+    qboxLayout5->addWidget(colorBestTimeLabel);
+    qboxLayout5->addWidget(colorBestTimeButton);
+    qboxLayout5->addWidget(colorIdealLabel);
+    qboxLayout5->addWidget(colorIdealButton);
+
+    colorMoyenne = new QColor(Qt::yellow);
+    colorMoyenneLabel = new QLabel("Average time color");
+    colorMoyenneButton = new QPushButton("Average time select color");
+    colorOutTime = new QColor(Qt::red);
+    colorOutTimeLabel = new QLabel("Time out of step color");
+    colorOutTimeButton = new QPushButton("Time out of step select color");
+
+    qboxLayout6->addWidget(colorMoyenneLabel);
+    qboxLayout6->addWidget(colorMoyenneButton);
+    qboxLayout6->addWidget(colorOutTimeLabel);
+    qboxLayout6->addWidget(colorOutTimeButton);
+
+    saveSettingsButton = new QPushButton("Save Settings");
+    loadSettingsButton = new QPushButton("Load Settings");
+
+    qboxLayout11->addWidget(saveSettingsButton);
+    qboxLayout11->addWidget(loadSettingsButton);
+
+
     qboxLayout3->addLayout(qboxLayout1);
     qboxLayout4->addLayout(qboxLayout2);
+    qboxLayout7->addLayout(qboxLayout5);
+    qboxLayout8->addLayout(qboxLayout6);
+    qboxLayout9->addLayout(qboxLayout11);
 
     //    qboxLayout10->addLayout(qboxLayout3);
     qboxLayout10->addLayout(qboxLayout4);
+    qboxLayout10->addLayout(qboxLayout7);
+    qboxLayout10->addLayout(qboxLayout8);
+    qboxLayout10->addLayout(qboxLayout9);
+
 
     return qboxLayout10;
 
@@ -427,8 +487,14 @@ void MainWindow::showDirectoryMenu()
 
     if(manRadio->isChecked())
     {
-        msgBox.setText("You are in manual mode input.");
-        msgBox.exec();
+        int rowTable2 = QInputDialog::getInt(this, tr("Number of row"), tr("row"), 4, 1, 10, 1);
+        int columnTable2 = QInputDialog::getInt(this, tr("Number of column"), tr("column"), 1, 1, 20, 1);
+
+        rowTable = rowTable2;
+        columnTable = columnTable2;
+
+        qDebug() << rowTable << columnTable;
+
     }
     else{
         if(fsbkRadio->isChecked() || civRadio->isChecked() || wsbkRadio->isChecked() || ewcRadio->isChecked())
@@ -442,9 +508,21 @@ void MainWindow::showDirectoryMenu()
     }
 }
 
+void MainWindow::showManualInputMenu()
+{
+    if(ddRadio->isChecked())
+    {
+        msgBox.setText("You are in 2D mode input.");
+        msgBox.exec();
+    }
+    else{
+        rowTable = QInputDialog::getInt(this, tr("Number of row"), tr("row"), 4, 1, 10, 1);
+        columnTable = QInputDialog::getInt(this, tr("Number of column"), tr("column"), 1, 1, 20, 1);
+    }
+}
+
 void MainWindow::populateArray()
 {
-
     Model *model = new Model();
 
     if((fsbkRadio->isChecked() || civRadio->isChecked() || wsbkRadio->isChecked() || ewcRadio->isChecked()) && fileName->isEmpty())
@@ -569,7 +647,7 @@ void MainWindow::populateArray()
 
                     if(test[j].indexOf('(') != -1)
                     {
-                        tableRACE2->item(i-2, j)->setBackground(Qt::green);
+                        tableRACE2->item(i-2, j)->setBackground(*colorBestTime);
                         test[j].remove(test[j].indexOf('('), 3);
                     }
 
@@ -581,7 +659,7 @@ void MainWindow::populateArray()
 
                     if(i == wordList.count()-1)
                     {
-                        tableRACE2->item(i-2, j)->setBackground(Qt::magenta);
+                        tableRACE2->item(i-2, j)->setBackground(*colorIdeal);
 
                     }
 
@@ -595,11 +673,11 @@ void MainWindow::populateArray()
                             {
                                 if( i != wordList.count()-1)
                                 {
-                                    tableRACE2->item(i-2, j)->setBackground(Qt::red);
+                                    tableRACE2->item(i-2, j)->setBackground(*colorOutTime);
 
                                 }
                                 else{
-                                    tableRACE2->item(i-2, j)->setBackground(Qt::magenta);
+                                    tableRACE2->item(i-2, j)->setBackground(*colorIdeal);
                                 }
                             }
                         }
@@ -637,7 +715,7 @@ void MainWindow::populateArray()
 
             tableRACE2->setItem(tableRACE2->rowCount(), j, new QTableWidgetItem(tabMoyenneString[j]));
             tableRACE2->setItem(wordList.count()-2, j, new QTableWidgetItem(tabMoyenneString[j]));
-            tableRACE2->item(wordList.count()-2,j)->setBackground(Qt::yellow);
+            tableRACE2->item(wordList.count()-2,j)->setBackground(*colorMoyenne);
 
         }
 
@@ -646,6 +724,196 @@ void MainWindow::populateArray()
 
     if(manRadio->isChecked())
     {
+        tableRACE2->setRowCount(rowTable+2);
+        tableRACE2->setColumnCount(columnTable);
+
+        for(int i=0; i<rowTable; i++)
+        {
+            QString data = "0.000";
+
+            for(int j=0; j<columnTable; j++)
+            {
+                tableRACE2->setItem(i, j, new QTableWidgetItem(data));
+
+            }
+        }
 
     }
+}
+
+void MainWindow::selectColorBestTime()
+{
+    QColor color = QColorDialog::getColor(*colorBestTime, this);
+
+    if(color.isValid())
+    {
+        *colorBestTime = color;
+    }
+
+}
+
+void MainWindow::selectColorIdealTime()
+{
+    QColor color = QColorDialog::getColor(*colorIdeal, this);
+
+    if(color.isValid())
+    {
+        *colorIdeal = color;
+    }
+
+}
+
+void MainWindow::selectColorAverageTime()
+{
+    QColor color = QColorDialog::getColor(*colorIdeal, this);
+
+    if(color.isValid())
+    {
+        *colorMoyenne = color;
+    }
+
+}
+
+void MainWindow::selectColorOutTime()
+{
+    QColor color = QColorDialog::getColor(*colorIdeal, this);
+
+    if(color.isValid())
+    {
+        *colorOutTime = color;
+    }
+
+}
+
+void MainWindow::saveSettings()
+{
+    settings = new QSettings("tech_solutionSettings.ini", QSettings::IniFormat);
+
+    settings->beginGroup("colorBestTime");
+    settings->setValue("red",colorBestTime->red());
+    settings->setValue("green", colorBestTime->green());
+    settings->setValue("blue", colorBestTime->blue());
+    settings->endGroup();
+
+    settings->beginGroup("colorIdealTime");
+    settings->setValue("red",colorIdeal->red());
+    settings->setValue("green", colorIdeal->green());
+    settings->setValue("blue", colorIdeal->blue());
+    settings->endGroup();
+
+    settings->beginGroup("colorMoyenne");
+    settings->setValue("red",colorMoyenne->red());
+    settings->setValue("green", colorMoyenne->green());
+    settings->setValue("blue", colorMoyenne->blue());
+    settings->endGroup();
+
+    settings->beginGroup("colorOutTime");
+    settings->setValue("red",colorOutTime->red());
+    settings->setValue("green", colorOutTime->green());
+    settings->setValue("blue", colorOutTime->blue());
+    settings->endGroup();
+
+}
+
+void MainWindow::loadSettings()
+{
+    settings = new QSettings("tech_solutionSettings.ini", QSettings::IniFormat);
+
+    colorBestTime->setRed(settings->value("colorBestTime/red").toInt());
+    colorBestTime->setGreen(settings->value("colorBestTime/green").toInt());
+    colorBestTime->setBlue(settings->value("colorBestTime/blue").toInt());
+
+    colorIdeal->setRed(settings->value("colorIdealTime/red").toInt());
+    colorIdeal->setGreen(settings->value("colorIdealTime/green").toInt());
+    colorIdeal->setBlue(settings->value("colorIdealTime/blue").toInt());
+
+    colorMoyenne->setRed(settings->value("colorMoyenne/red").toInt());
+    colorMoyenne->setGreen(settings->value("colorMoyenne/green").toInt());
+    colorMoyenne->setBlue(settings->value("colorMoyenne/blue").toInt());
+
+    colorOutTime->setRed(settings->value("colorOutTime/red").toInt());
+    colorOutTime->setGreen(settings->value("colorOutTime/green").toInt());
+    colorOutTime->setBlue(settings->value("colorOutTime/blue").toInt());
+}
+
+void MainWindow::openEditWindow(int row, int col)
+{
+    double timeSecond = QInputDialog::getDouble(this, tr("Time in second"), tr("Time (second)"), 1, 1, 500, 3);
+
+    tableRACE2->item(row,col)->setText(QString::number(timeSecond));
+
+    calculMoyenneManualMode();
+}
+
+void MainWindow::calculMoyenneManualMode()
+{
+
+    QString tabTime[rowTable][columnTable] = {0};
+    double tabBestTime[columnTable] = {60};
+    int tabBestTimeCoord[columnTable] ={0};
+    int nbLap[columnTable] = {0};
+
+    for(int i=0; i<rowTable; i++)
+    {
+        for(int j=0; j<columnTable; j++)
+        {
+            double time = tableRACE2->item(i,j)->text().toDouble();
+
+            if(time < tabBestTime[j])
+            {
+                tabBestTimeCoord[j] = i;
+                tabBestTime[j] = time;
+
+                tabTime[i][j] = tableRACE2->item(i,j)->text()/*.toDouble()*/;
+            }
+
+        }
+    }
+
+    //    for(int i=0; i<rowTable; i++)
+    //    {
+    //        for(int j=0;j<columnTable;j++)
+    //        {
+    //            qDebug() << "ij" << i<<j<<tabTime[i][j];
+    //        }
+    //    }
+}
+
+void MainWindow::generateFile()
+{
+
+    //    for(int i=0; i<tableRACE2->rowCount()-2;i++)
+    //    {
+    //        for(int j=0; j<tableRACE2->columnCount(); j++)
+    //        {
+    //            qDebug() << i << j << tableRACE2->item(i,j)->text();
+    //        }
+    //    }
+
+    QPrinter printer;
+
+//    QPrintDialog *dialog = new QPrintDialog(&printer, this);
+//    dialog->setWindowTitle(tr("Print Document"));
+//    dialog->exec();
+
+    QPrintDialog dialog(&printer);
+
+    if(dialog.exec() == QDialog::Accepted)
+    {
+        QPainter painter(&printer);
+
+//                painter.begin(&printer);
+//                double xscale = printer.pageRect().width()/double(tableRACE2->width());
+//                double yscale = printer.pageRect().height()/double(tableRACE2->height());
+//                double scale = qMin(xscale, yscale);
+//                painter.translate(printer.paperRect().x() + printer.pageRect().width()/2,
+//                                  printer.paperRect().y() + printer.pageRect().height()/2);
+//                painter.scale(scale, scale);
+//                painter.translate(-width()/2, height()/2);
+
+//                tableRACE2->render(&painter);
+
+        tableRACE2->render(&painter);
+    }
+
 }

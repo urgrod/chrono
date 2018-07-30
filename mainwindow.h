@@ -25,6 +25,16 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QVector>
+#include <QColorDialog>
+#include <QColor>
+#include <QSettings>
+#include <QInputDialog>
+#include <QFlags>
+#include <QPrintDialog>
+#include <QPrinter>
+#include <QPainter>
+#include <QTextBrowser>
+#include <QTextTableCell>
 #include <QDebug>
 
 namespace Ui {
@@ -48,6 +58,8 @@ public:
     QLayout *createViewRACE1();
     QLayout *createViewRACE2();
     QLayout *createViewParametre();
+    void calculMoyenneManualMode();
+
 
 private:
     QWidget *widgetGeneral;
@@ -113,6 +125,10 @@ private:
     QLabel *ficTypeLabel;
     QLabel *nbTourMinLabel;
     QLabel *nbTourMaxLabel;
+    QLabel *colorMoyenneLabel;
+    QLabel *colorBestTimeLabel;
+    QLabel *colorIdealLabel;
+    QLabel *colorOutTimeLabel;
     QSpinBox *pourcentTourSpin;
     QSpinBox *nbTourMinSpin;
     QSpinBox *nbTourMaxSpin;
@@ -122,16 +138,40 @@ private:
     QRadioButton *ewcRadio;
     QRadioButton *ddRadio;
     QRadioButton *manRadio;
+    QColor *colorMoyenne;
+    QColor *colorBestTime;
+    QColor *colorIdeal;
+    QColor *colorOutTime;
+    QPushButton *colorMoyenneButton;
+    QPushButton *colorBestTimeButton;
+    QPushButton *colorIdealButton;
+    QPushButton *colorOutTimeButton;
+    QPushButton *loadSettingsButton;
+    QPushButton *saveSettingsButton;
+    QSettings *settings;
 
 
 
     //Directory Menu
     QString *fileName;
 
+    //InputDialog
+    int rowTable;
+    int columnTable;
+
 
 public slots:
     void showDirectoryMenu();
+    void showManualInputMenu();
     void populateArray();
+    void selectColorBestTime();
+    void selectColorAverageTime();
+    void selectColorIdealTime();
+    void selectColorOutTime();
+    void saveSettings();
+    void loadSettings();
+    void openEditWindow(int row, int col);
+    void generateFile();
 
 };
 
