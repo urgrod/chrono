@@ -58,6 +58,7 @@ MainWindow::MainWindow() : QMainWindow()
     if(manRadio->isChecked())
     {
         connect(tableRACE2, SIGNAL(cellDoubleClicked(int,int)), this, SLOT(openEditWindow(int,int)));
+        connect(populateTableRACE2, SIGNAL(clicked(bool)), this, SLOT(calculMoyenneManualMode()));
     }
 
     connect(generatePDFRACE2, SIGNAL(clicked(bool)), this, SLOT(generateFile()));
@@ -420,9 +421,9 @@ QLayout *MainWindow::createViewParametre()
     wsbkRadio = new QRadioButton("WSBK");
     ewcRadio = new QRadioButton("EWC");
     ddRadio = new QRadioButton("2D");
-    ddRadio->setChecked(1);
+    //    ddRadio->setChecked(1);
     manRadio = new QRadioButton("manual input");
-
+    manRadio->setChecked(1);
     qboxLayout2->addWidget(ficTypeLabel);
     qboxLayout2->addWidget(fsbkRadio);
     qboxLayout2->addWidget(civRadio);
@@ -523,266 +524,249 @@ void MainWindow::showManualInputMenu()
 
 void MainWindow::populateArray()
 {
-    Model *model = new Model();
 
-    //    if((fsbkRadio->isChecked() || civRadio->isChecked() || wsbkRadio->isChecked() || ewcRadio->isChecked()) && fileName->isEmpty())
-    //    {
-    //        qDebug()<<"pdf";
-
-    //        if(fsbkRadio->isChecked())
-    //        {
-    //            qDebug() << "fsbk";
-    //        }
-
-    //        if(civRadio->isChecked())
-    //        {
-    //            qDebug() << "civ";
-    //        }
-
-    //        if(wsbkRadio->isChecked())
-    //        {
-    //            qDebug() << "wsbk";
-    //        }
-    //    }
-
-    if(ddRadio->isChecked())
+    if(fileName->isEmpty() && !manRadio->isChecked())
     {
+        QMessageBox msgBox;
+        msgBox.setText("You did not choose a file");
+        msgBox.exec();
+    }
+    else{
+        Model *model = new Model();
 
-        QStringList wordList = model->parseTableur(*fileName);
-        QStringList wordListSplit;
+        //    if((fsbkRadio->isChecked() || civRadio->isChecked() || wsbkRadio->isChecked() || ewcRadio->isChecked()) && fileName->isEmpty())
+        //    {
+        //        qDebug()<<"pdf";
 
-        tableRACE2->setRowCount(wordList.count()-1);
-        tableRACE2->setColumnCount(wordList[0].count(',')+1);
+        //        if(fsbkRadio->isChecked())
+        //        {
+        //            qDebug() << "fsbk";
+        //        }
 
-        for(int i=0; i<wordList.count(); i++)
+        //        if(civRadio->isChecked())
+        //        {
+        //            qDebug() << "civ";
+        //        }
+
+        //        if(wsbkRadio->isChecked())
+        //        {
+        //            qDebug() << "wsbk";
+        //        }
+        //    }
+
+        if(ddRadio->isChecked())
         {
-            QString data = wordList[i];
-            wordListSplit << data.split(',');
-        }
 
-        for(int i=0; i<wordList[0].count(',')+1; i++)
-        {
-            tableRACE2->setHorizontalHeaderItem(i, new QTableWidgetItem(wordListSplit[i]));
+            QStringList wordList = model->parseTableur(*fileName);
+            QStringList wordListSplit;
+            populateTableRACE2->setEnabled(false);
 
-        }
+            tableRACE2->setRowCount(wordList.count()-1);
+            tableRACE2->setColumnCount(wordList[0].count(',')+1);
 
-        //        //        int const nbSector = wordList[0].count(',')+1;
-        //        ////        int nbSector =4;
-        //        //        QString tabTime [nbSector]/* = {0,0,0,0,0}*/;
-        //        //        double tabTimeSecond [nbSector]/* = {0,0,0,0,0}*/;
-        //        //        double tabTimeMarge[nbSector]/* = {0,0,0,0,0}*/;
-        //        //        double tabTimeMoyenne[nbSector]/* = {0,0,0,0,0}*/;
-        //        //        int tabLapMoyenne[nbSector]/* = {0,0,0,0,0}*/;
-
-//        int const nbSector = wordList[0].count(',');
-        QStringList tabTime;
-        QStringList tabTimeSecond;
-        QStringList tabTimeMarge;
-        QStringList tabTimeMoyenne;
-        QStringList tabLapMoyenne;
-
-        for(int i=0; i<wordList[0].count(',')+1; i++)
-        {
-            tabTimeSecond << QString::number(0);
-            tabTimeMarge << QString::number(0);
-            tabLapMoyenne << QString::number(0);
-            tabTimeMoyenne << QString::number(0);
-
-        }
-
-        for(int i=0; i<wordList[0].count()+1; i++)
-        {
-            tabTime << QString::number(0);
-        }
-
-        for(int i=0; i<wordList.count(); i++)
-        {
-            QString data = wordList[i];
-            QStringList test = data.split(',');
-
-            for(int j=1; j<wordList[0].count(',')+1; j++)
+            for(int i=0; i<wordList.count(); i++)
             {
-                if(test[j].indexOf('(') != -1)
-                {
-                    tabTime[j] = test[j];
-                }
+                QString data = wordList[i];
+                wordListSplit << data.split(',');
             }
-        }
 
-        //        qDebug() << tabTime;
-
-        for(int i=0; i<wordList[0].count(',')+1; i++)
-        {
-            tabTime[i].remove(tabTime[i].indexOf('('), 3);
-            tabTime[i].remove(0,tabTime[i].indexOf(':')+1);
-
-            if(tabTime[i].indexOf('m') != -1) tabTime[i].remove(tabTime[i].indexOf('m'), 3);
-            tabTimeSecond[i] = tabTime[i];
-            qDebug() << "tabTime[i]" << tabTime[i];
-        }
-
-        tabTime.removeAll(QString("0"));
-        qDebug() << "tabTime" <<tabTime;
-        //        tabTimeMarge << QString::number(0);
-
-
-        for(int i=0; i<wordList[0].count(',')+1; i++)
-        {
-            double time = tabTime[i].toDouble() + ((double)pourcentTourSpin->value()/100)*tabTime[i].toDouble();
-            tabTimeMarge[i] =  QString::number(time);
-        }
-
-        qDebug() << tabTimeMarge;
-
-        for(int i=0; i<wordList.count(); i++)
-        {
-            QString data = wordList[i];
-            QStringList test = data.split(',');
-
-            for(int j=0; j<wordList[0].count(','); j++)
+            for(int i=0; i<wordList[0].count(',')+1; i++)
             {
+                tableRACE2->setHorizontalHeaderItem(i, new QTableWidgetItem(wordListSplit[i]));
 
-                if(test[j].indexOf(':') != -1)
+            }
+
+            QStringList tabTime;
+            QStringList tabTimeSecond;
+            QStringList tabTimeMarge;
+            QStringList tabTimeMoyenne;
+            QStringList tabLapMoyenne;
+
+            for(int i=0; i<wordList[0].count(',')+1; i++)
+            {
+                tabTimeSecond << QString::number(0);
+                tabTimeMarge << QString::number(0);
+                tabLapMoyenne << QString::number(0);
+                tabTimeMoyenne << QString::number(0);
+
+            }
+
+            for(int i=0; i<wordList[0].count()+1; i++)
+            {
+                tabTime << QString::number(0);
+            }
+
+            for(int i=0; i<wordList.count(); i++)
+            {
+                QString data = wordList[i];
+                QStringList test = data.split(',');
+
+                for(int j=1; j<wordList[0].count(',')+1; j++)
                 {
-                    test[j].remove(0, test[j].indexOf(':')+1);
-                }
-
-                if(test[j].indexOf('(') != -1)
-                {
-                    test[j].remove(test[j].indexOf('('), 3);
-
+                    if(test[j].indexOf('(') != -1)
+                    {
+                        tabTime[j] = test[j];
+                    }
                 }
             }
 
-
-            for(int i=2; i<wordList.count(); i++)
+            for(int i=0; i<wordList[0].count(',')+1; i++)
             {
+                tabTime[i].remove(tabTime[i].indexOf('('), 3);
+                tabTime[i].remove(0,tabTime[i].indexOf(':')+1);
 
-                for(int j=0; j<wordList[0].count(',')+1; j++)
+                if(tabTime[i].indexOf('m') != -1) tabTime[i].remove(tabTime[i].indexOf('m'), 3);
+                tabTimeSecond[i] = tabTime[i];
+            }
+
+            tabTime.removeAll(QString("0"));
+
+            for(int i=0; i<wordList[0].count(',')+1; i++)
+            {
+                double time = tabTime[i].toDouble() + ((double)pourcentTourSpin->value()/100)*tabTime[i].toDouble();
+                tabTimeMarge[i] =  QString::number(time);
+            }
+
+            qDebug() << tabTimeMarge;
+
+            for(int i=0; i<wordList.count(); i++)
+            {
+                QString data = wordList[i];
+                QStringList test = data.split(',');
+
+                for(int j=0; j<wordList[0].count(','); j++)
                 {
-                    QString data = wordList[i];
-                    QStringList test = data.split(',');
-
-
-
-                    if(test[j].indexOf('m') != -1)
-                    {
-                        test[j].remove(test[j].indexOf('m'), 3);
-                    }
-
-                    tableRACE2->setItem(i-2, j, new QTableWidgetItem(test[j]));
-
-                    if(test[j].indexOf('(') != -1)
-                    {
-                        QString ghu = test[j];
-                        tableRACE2->setItem(i-2, j, new QTableWidgetItem(ghu.remove(ghu.indexOf('('), 3)));
-                    }
-
-                    if(test[j].indexOf('(') != -1)
-                    {
-                        tableRACE2->item(i-2, j)->setBackground(*colorBestTime);
-                        test[j].remove(test[j].indexOf('('), 3);
-                    }
 
                     if(test[j].indexOf(':') != -1)
                     {
                         test[j].remove(0, test[j].indexOf(':')+1);
-
                     }
 
-                    if(i == wordList.count()-1)
+                    if(test[j].indexOf('(') != -1)
                     {
-                        tableRACE2->item(i-2, j)->setBackground(*colorIdeal);
+                        test[j].remove(test[j].indexOf('('), 3);
 
                     }
+                }
 
-                    if(test[j].toDouble() > tabTimeMarge[j].toDouble() || test[j].toDouble() < tabTimeSecond[j].toDouble())
+
+                for(int i=2; i<wordList.count(); i++)
+                {
+
+                    for(int j=0; j<wordList[0].count(',')+1; j++)
                     {
+                        QString data = wordList[i];
+                        QStringList test = data.split(',');
 
-                        if(j != 0 )
+
+
+                        if(test[j].indexOf('m') != -1)
                         {
-                            if( i != wordList.count()-1)
-                            {
-                                tableRACE2->item(i-2, j)->setBackground(*colorOutTime);
+                            test[j].remove(test[j].indexOf('m'), 3);
+                        }
 
-                            }
-                            else{
-                                tableRACE2->item(i-2, j)->setBackground(*colorIdeal);
+                        tableRACE2->setItem(i-2, j, new QTableWidgetItem(test[j]));
+
+                        if(test[j].indexOf('(') != -1)
+                        {
+                            QString ghu = test[j];
+                            tableRACE2->setItem(i-2, j, new QTableWidgetItem(ghu.remove(ghu.indexOf('('), 3)));
+                        }
+
+                        if(test[j].indexOf('(') != -1)
+                        {
+                            tableRACE2->item(i-2, j)->setBackground(*colorBestTime);
+                            test[j].remove(test[j].indexOf('('), 3);
+                        }
+
+                        if(test[j].indexOf(':') != -1)
+                        {
+                            test[j].remove(0, test[j].indexOf(':')+1);
+
+                        }
+
+                        if(i == wordList.count()-1)
+                        {
+                            tableRACE2->item(i-2, j)->setBackground(*colorIdeal);
+
+                        }
+
+                        if(test[j].toDouble() > tabTimeMarge[j].toDouble() || test[j].toDouble() < tabTimeSecond[j].toDouble())
+                        {
+
+                            if(j != 0 )
+                            {
+                                if( i != wordList.count()-1)
+                                {
+                                    tableRACE2->item(i-2, j)->setBackground(*colorOutTime);
+
+                                }
+                                else{
+                                    tableRACE2->item(i-2, j)->setBackground(*colorIdeal);
+                                }
                             }
                         }
-                    }
-                    else{
-                        //                        qDebug() << tabLapMoyenne;
-                        tabTimeMoyenne[j] = QString::number(tabTimeMoyenne[j].toDouble() + test[j].toDouble());
-                        tabLapMoyenne[j] = QString::number(tabLapMoyenne[j].toDouble()+1);
+                        else{
+                            //                        qDebug() << tabLapMoyenne;
+                            tabTimeMoyenne[j] = QString::number(tabTimeMoyenne[j].toDouble() + test[j].toDouble());
+                            tabLapMoyenne[j] = QString::number(tabLapMoyenne[j].toDouble()+1);
+
+
+                        }
 
 
                     }
-
-
                 }
+
+
+            }
+
+            QStringList tabMoyenneString;
+            QString ghu = "Average";
+
+            tabMoyenneString << ghu;
+
+            for(int i=1; i<wordList[0].count(',')+1; i++)
+            {
+                tabMoyenneString << QString::number(0);
+            }
+            \
+            for(int i=0; i<wordList[0].count(',')+1; i++)
+            {
+                tabMoyenneString[i] = QString::number(tabTimeMoyenne[i].toDouble()/tabLapMoyenne[i].toInt(),'g' ,5);
+
+            }
+
+            tabMoyenneString[0] = ghu;
+
+            for(int j=0; j<wordList[0].count(',')+1; j++)
+            {
+
+                tableRACE2->setItem(tableRACE2->rowCount(), j, new QTableWidgetItem(tabMoyenneString[j]));
+                tableRACE2->setItem(wordList.count()-2, j, new QTableWidgetItem(tabMoyenneString[j]));
+                tableRACE2->item(wordList.count()-2,j)->setBackground(*colorMoyenne);
+
             }
 
 
         }
 
-        QStringList tabMoyenneString;
-        QString ghu = "Average";
-
-        tabMoyenneString << ghu;
-
-        //        qDebug() <<"lap" << tabLapMoyenne;
-        //        qDebug() << "time" << tabTimeMoyenne;
-        //        qDebug() << "string" << tabMoyenneString;
-
-
-        for(int i=1; i<wordList[0].count(',')+1; i++)
+        if(manRadio->isChecked())
         {
-            tabMoyenneString << QString::number(0);
+            tableRACE2->setRowCount(rowTable+2);
+            tableRACE2->setColumnCount(columnTable);
+
+            for(int i=0; i<rowTable; i++)
+            {
+                QString data = "0.000";
+
+                for(int j=0; j<columnTable; j++)
+                {
+                    tableRACE2->setItem(i, j, new QTableWidgetItem(data));
+
+                }
+            }
         }
-
-        //        qDebug() <<"lap" << tabLapMoyenne;
-        //        qDebug() << "time" << tabTimeMoyenne;
-        //        qDebug() << "string" << tabMoyenneString;
-
-        for(int i=0; i<wordList[0].count(',')+1; i++)
-        {
-            tabMoyenneString[i] = QString::number(tabTimeMoyenne[i].toDouble()/tabLapMoyenne[i].toInt(),'g' ,5);
-
-        }
-
-        //        qDebug() << tabMoyenneString;
-
-        tabMoyenneString[0] = ghu;
-
-        for(int j=0; j<wordList[0].count(',')+1; j++)
-        {
-
-            tableRACE2->setItem(tableRACE2->rowCount(), j, new QTableWidgetItem(tabMoyenneString[j]));
-            tableRACE2->setItem(wordList.count()-2, j, new QTableWidgetItem(tabMoyenneString[j]));
-            tableRACE2->item(wordList.count()-2,j)->setBackground(*colorMoyenne);
-            //            qDebug() << tabMoyenneString[j];
-
-        }
-
-
-    }
-
-    if(manRadio->isChecked())
-    {
-        //        tableRACE2->setRowCount(rowTable+2);
-        //        tableRACE2->setColumnCount(columnTable);
-
-        //        for(int i=0; i<rowTable; i++)
-        //        {
-        //            QString data = "0.000";
-
-        //            for(int j=0; j<columnTable; j++)
-        //            {
-        //                tableRACE2->setItem(i, j, new QTableWidgetItem(data));
-
-        //            }
-        //        }
 
     }
 }
@@ -889,42 +873,88 @@ void MainWindow::openEditWindow(int row, int col)
 
     tableRACE2->item(row,col)->setText(QString::number(timeSecond));
 
-    //    calculMoyenneManualMode();
 }
 
-//void MainWindow::calculMoyenneManualMode()
-//{
+void MainWindow::calculMoyenneManualMode()
+{
+    QStringList tabBestTime;
+    QStringList tabTimeMarge;
+    QStringList tabLapMoyenne;
+    QStringList tabTimeMoyenne;
+    QList<QStringList> tabTime;
+    QList<QStringList> coordBestTime;
 
-//    QString tabTime[/*rowTable*/][/*columnTable*/] = {0};
-//    double tabBestTime[/*columnTable*/] = {60};
-//    int tabBestTimeCoord[/*columnTable*/] ={0};
-//    int nbLap[/*columnTable*/] = {0};
+    for(int i=0; i<columnTable; i++)
+    {
+        tabBestTime << QString::number(60);
+        tabTimeMarge << QString::number(60);
+        tabTimeMoyenne << QString::number(0);
+        tabLapMoyenne << QString::number(0);
+    }
 
-//    for(int i=0; i<rowTable; i++)
-//    {
-//        for(int j=0; j<columnTable; j++)
-//        {
-//            double time = tableRACE2->item(i,j)->text().toDouble();
+    for(int i=0; i<rowTable; i++)
+    {
+        QStringList tempo;
+        for(int j=0; j<columnTable; j++)
+        {
+            tempo << tableRACE2->item(i,j)->text();
 
-//            if(time < tabBestTime[j])
-//            {
-//                tabBestTimeCoord[j] = i;
-//                tabBestTime[j] = time;
+        }
+        tabTime << tempo;
+    }
 
-//                tabTime[i][j] = tableRACE2->item(i,j)->text()/*.toDouble()*/;
-//            }
+    qDebug() << tabTime;
 
-//        }
-//    }
+    for(int i=0; i<rowTable; i++)
+    {
+        QStringList line;
+        line << tabTime[i];
+        //        qDebug() << "tabTime" << tabTime[i];
+        for(int j=0; j<columnTable; j++)
+        {
 
-//    //    for(int i=0; i<rowTable; i++)
-//    //    {
-//    //        for(int j=0;j<columnTable;j++)
-//    //        {
-//    //            qDebug() << "ij" << i<<j<<tabTime[i][j];
-//    //        }
-//    //    }
-//}
+            if(line[j].toDouble() < tabBestTime[j].toDouble())
+            {
+                tabBestTime[j] = line[j];
+            }
+        }
+    }
+
+    for(int i=0; i<rowTable; i++)
+    {
+        QStringList line;
+        line << tabBestTime[i];
+
+        for(int j=0; j<columnTable; j++)
+        {
+            double marge = tabBestTime[j].toDouble() + ((double)pourcentTourSpin->value()/100)*tabBestTime[j].toDouble();
+            tabTimeMarge[j] = QString::number(marge);
+        }
+    }
+
+    for(int i=0; i<rowTable; i++)
+    {
+        QStringList line;
+        line << tabTime[i];
+
+        for(int j=0; j<columnTable; j++)
+        {
+            if(line[j] < tabTimeMarge[j])
+            {
+                qDebug() << line[j];
+                qDebug() << tabTimeMarge[j];
+                qDebug() << "-----------------";
+                tabTimeMoyenne[j] = QString::number(tabTimeMoyenne[j].toDouble() + line[j].toDouble());
+                tabLapMoyenne[j] = QString::number(tabLapMoyenne[j].toDouble() +1);
+            }
+        }
+    }
+
+    qDebug() << "moyenne" << tabTimeMoyenne;
+    qDebug() << "lap" << tabLapMoyenne;
+
+
+}
 
 void MainWindow::generateFile()
 {

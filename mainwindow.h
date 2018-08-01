@@ -58,7 +58,7 @@ public:
     QLayout *createViewRACE1();
     QLayout *createViewRACE2();
     QLayout *createViewParametre();
-    void calculMoyenneManualMode();
+//    void calculMoyenneManualMode();
 
 
 private:
@@ -172,6 +172,7 @@ public slots:
     void loadSettings();
     void openEditWindow(int row, int col);
     void generateFile();
+    void calculMoyenneManualMode();
 
 };
 
