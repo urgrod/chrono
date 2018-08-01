@@ -30,8 +30,8 @@
 #include <QSettings>
 #include <QInputDialog>
 #include <QFlags>
-#include <QPrintDialog>
-#include <QPrinter>
+//#include <QPrinter>
+//#include <QPrintDialog>
 #include <QPainter>
 #include <QTextBrowser>
 #include <QTextTableCell>

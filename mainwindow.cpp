@@ -4,7 +4,7 @@ MainWindow::MainWindow() : QMainWindow()
 {
 
     this->setWindowTitle("TECH SOLUTIONS");
-    this->resize(QApplication::desktop()->width() - 50 , QApplication::desktop()->height() - 50);
+    this->resize(QApplication::desktop()->width() - 1000 , QApplication::desktop()->height() - 200);
 
     widgetGeneral = new QWidget;
     QHBoxLayout *qblGeneral = new QHBoxLayout;
@@ -13,7 +13,7 @@ MainWindow::MainWindow() : QMainWindow()
     this->setCentralWidget(widgetGeneral);
 
     onglets = new QTabWidget(this);
-    onglets->setGeometry(0,0,QApplication::desktop()->width() -50 , QApplication::desktop()->height() -50 );
+    onglets->setGeometry(0,0,QApplication::desktop()->width() -1000 , QApplication::desktop()->height() -200 );
 
     tabFP1 = new QWidget;
     tabFP1->setLayout(createViewFP1());
@@ -41,7 +41,7 @@ MainWindow::MainWindow() : QMainWindow()
     //    onglets->addTab(tabQ1, "Q1");
     //    onglets->addTab(tabQ2, "Q2");
     //    onglets->addTab(tabRACE1, "RACE1");
-    onglets->addTab(tabRACE2, "RACE2");
+    onglets->addTab(tabRACE2, "FILE");
     onglets->addTab(tabParametre, "SETTINGS");
 
     connect(importPDFRACE2, SIGNAL(clicked(bool)), this, SLOT(showDirectoryMenu()));
@@ -525,25 +525,25 @@ void MainWindow::populateArray()
 {
     Model *model = new Model();
 
-    if((fsbkRadio->isChecked() || civRadio->isChecked() || wsbkRadio->isChecked() || ewcRadio->isChecked()) && fileName->isEmpty())
-    {
-        qDebug()<<"pdf";
+    //    if((fsbkRadio->isChecked() || civRadio->isChecked() || wsbkRadio->isChecked() || ewcRadio->isChecked()) && fileName->isEmpty())
+    //    {
+    //        qDebug()<<"pdf";
 
-        if(fsbkRadio->isChecked())
-        {
-            qDebug() << "fsbk";
-        }
+    //        if(fsbkRadio->isChecked())
+    //        {
+    //            qDebug() << "fsbk";
+    //        }
 
-        if(civRadio->isChecked())
-        {
-            qDebug() << "civ";
-        }
+    //        if(civRadio->isChecked())
+    //        {
+    //            qDebug() << "civ";
+    //        }
 
-        if(wsbkRadio->isChecked())
-        {
-            qDebug() << "wsbk";
-        }
-    }
+    //        if(wsbkRadio->isChecked())
+    //        {
+    //            qDebug() << "wsbk";
+    //        }
+    //    }
 
     if(ddRadio->isChecked())
     {
@@ -566,12 +566,34 @@ void MainWindow::populateArray()
 
         }
 
-        int nbSector = wordList[0].count(',')+1;
-        QString tabTime [nbSector];
-        double tabTimeSecond [nbSector];
-        double tabTimeMarge[nbSector];
-        double tabTimeMoyenne[nbSector] = {0};
-        int tabLapMoyenne[nbSector] = {0};
+        //        //        int const nbSector = wordList[0].count(',')+1;
+        //        ////        int nbSector =4;
+        //        //        QString tabTime [nbSector]/* = {0,0,0,0,0}*/;
+        //        //        double tabTimeSecond [nbSector]/* = {0,0,0,0,0}*/;
+        //        //        double tabTimeMarge[nbSector]/* = {0,0,0,0,0}*/;
+        //        //        double tabTimeMoyenne[nbSector]/* = {0,0,0,0,0}*/;
+        //        //        int tabLapMoyenne[nbSector]/* = {0,0,0,0,0}*/;
+
+//        int const nbSector = wordList[0].count(',');
+        QStringList tabTime;
+        QStringList tabTimeSecond;
+        QStringList tabTimeMarge;
+        QStringList tabTimeMoyenne;
+        QStringList tabLapMoyenne;
+
+        for(int i=0; i<wordList[0].count(',')+1; i++)
+        {
+            tabTimeSecond << QString::number(0);
+            tabTimeMarge << QString::number(0);
+            tabLapMoyenne << QString::number(0);
+            tabTimeMoyenne << QString::number(0);
+
+        }
+
+        for(int i=0; i<wordList[0].count()+1; i++)
+        {
+            tabTime << QString::number(0);
+        }
 
         for(int i=0; i<wordList.count(); i++)
         {
@@ -587,19 +609,30 @@ void MainWindow::populateArray()
             }
         }
 
-        for(int i=0; i<(nbSector); i++)
+        //        qDebug() << tabTime;
+
+        for(int i=0; i<wordList[0].count(',')+1; i++)
         {
             tabTime[i].remove(tabTime[i].indexOf('('), 3);
             tabTime[i].remove(0,tabTime[i].indexOf(':')+1);
 
             if(tabTime[i].indexOf('m') != -1) tabTime[i].remove(tabTime[i].indexOf('m'), 3);
-            tabTimeSecond[i] = tabTime[i].toDouble();
+            tabTimeSecond[i] = tabTime[i];
+            qDebug() << "tabTime[i]" << tabTime[i];
         }
 
-        for(int i=0; i<nbSector; i++)
+        tabTime.removeAll(QString("0"));
+        qDebug() << "tabTime" <<tabTime;
+        //        tabTimeMarge << QString::number(0);
+
+
+        for(int i=0; i<wordList[0].count(',')+1; i++)
         {
-            tabTimeMarge[i] = tabTimeSecond[i]+((double)pourcentTourSpin->value()/100)*tabTimeSecond[i];
+            double time = tabTime[i].toDouble() + ((double)pourcentTourSpin->value()/100)*tabTime[i].toDouble();
+            tabTimeMarge[i] =  QString::number(time);
         }
+
+        qDebug() << tabTimeMarge;
 
         for(int i=0; i<wordList.count(); i++)
         {
@@ -663,33 +696,28 @@ void MainWindow::populateArray()
 
                     }
 
-
-                    for(int k=0; k < nbSector; k++)
+                    if(test[j].toDouble() > tabTimeMarge[j].toDouble() || test[j].toDouble() < tabTimeSecond[j].toDouble())
                     {
-                        if(test[j].toDouble() > tabTimeMarge[j] || test[j].toDouble() < tabTimeSecond[j])
+
+                        if(j != 0 )
                         {
-
-                            if(j != 0 )
+                            if( i != wordList.count()-1)
                             {
-                                if( i != wordList.count()-1)
-                                {
-                                    tableRACE2->item(i-2, j)->setBackground(*colorOutTime);
+                                tableRACE2->item(i-2, j)->setBackground(*colorOutTime);
 
-                                }
-                                else{
-                                    tableRACE2->item(i-2, j)->setBackground(*colorIdeal);
-                                }
+                            }
+                            else{
+                                tableRACE2->item(i-2, j)->setBackground(*colorIdeal);
                             }
                         }
-                        else{
-                            tabTimeMoyenne[j] += test[j].toDouble();
-                            tabLapMoyenne[j]++;
+                    }
+                    else{
+                        //                        qDebug() << tabLapMoyenne;
+                        tabTimeMoyenne[j] = QString::number(tabTimeMoyenne[j].toDouble() + test[j].toDouble());
+                        tabLapMoyenne[j] = QString::number(tabLapMoyenne[j].toDouble()+1);
 
-                        }
 
                     }
-
-
 
 
                 }
@@ -703,12 +731,29 @@ void MainWindow::populateArray()
 
         tabMoyenneString << ghu;
 
-        for(int i=1; i<nbSector; i++)
-        {
-            tabMoyenneString << QString::number(tabTimeMoyenne[i]/tabLapMoyenne[i],'g' ,5);
+        //        qDebug() <<"lap" << tabLapMoyenne;
+        //        qDebug() << "time" << tabTimeMoyenne;
+        //        qDebug() << "string" << tabMoyenneString;
 
+
+        for(int i=1; i<wordList[0].count(',')+1; i++)
+        {
+            tabMoyenneString << QString::number(0);
+        }
+
+        //        qDebug() <<"lap" << tabLapMoyenne;
+        //        qDebug() << "time" << tabTimeMoyenne;
+        //        qDebug() << "string" << tabMoyenneString;
+
+        for(int i=0; i<wordList[0].count(',')+1; i++)
+        {
+            tabMoyenneString[i] = QString::number(tabTimeMoyenne[i].toDouble()/tabLapMoyenne[i].toInt(),'g' ,5);
 
         }
+
+        //        qDebug() << tabMoyenneString;
+
+        tabMoyenneString[0] = ghu;
 
         for(int j=0; j<wordList[0].count(',')+1; j++)
         {
@@ -716,6 +761,7 @@ void MainWindow::populateArray()
             tableRACE2->setItem(tableRACE2->rowCount(), j, new QTableWidgetItem(tabMoyenneString[j]));
             tableRACE2->setItem(wordList.count()-2, j, new QTableWidgetItem(tabMoyenneString[j]));
             tableRACE2->item(wordList.count()-2,j)->setBackground(*colorMoyenne);
+            //            qDebug() << tabMoyenneString[j];
 
         }
 
@@ -724,22 +770,23 @@ void MainWindow::populateArray()
 
     if(manRadio->isChecked())
     {
-        tableRACE2->setRowCount(rowTable+2);
-        tableRACE2->setColumnCount(columnTable);
+        //        tableRACE2->setRowCount(rowTable+2);
+        //        tableRACE2->setColumnCount(columnTable);
 
-        for(int i=0; i<rowTable; i++)
-        {
-            QString data = "0.000";
+        //        for(int i=0; i<rowTable; i++)
+        //        {
+        //            QString data = "0.000";
 
-            for(int j=0; j<columnTable; j++)
-            {
-                tableRACE2->setItem(i, j, new QTableWidgetItem(data));
+        //            for(int j=0; j<columnTable; j++)
+        //            {
+        //                tableRACE2->setItem(i, j, new QTableWidgetItem(data));
 
-            }
-        }
+        //            }
+        //        }
 
     }
 }
+
 
 void MainWindow::selectColorBestTime()
 {
@@ -842,42 +889,42 @@ void MainWindow::openEditWindow(int row, int col)
 
     tableRACE2->item(row,col)->setText(QString::number(timeSecond));
 
-    calculMoyenneManualMode();
+    //    calculMoyenneManualMode();
 }
 
-void MainWindow::calculMoyenneManualMode()
-{
+//void MainWindow::calculMoyenneManualMode()
+//{
 
-    QString tabTime[rowTable][columnTable] = {0};
-    double tabBestTime[columnTable] = {60};
-    int tabBestTimeCoord[columnTable] ={0};
-    int nbLap[columnTable] = {0};
+//    QString tabTime[/*rowTable*/][/*columnTable*/] = {0};
+//    double tabBestTime[/*columnTable*/] = {60};
+//    int tabBestTimeCoord[/*columnTable*/] ={0};
+//    int nbLap[/*columnTable*/] = {0};
 
-    for(int i=0; i<rowTable; i++)
-    {
-        for(int j=0; j<columnTable; j++)
-        {
-            double time = tableRACE2->item(i,j)->text().toDouble();
+//    for(int i=0; i<rowTable; i++)
+//    {
+//        for(int j=0; j<columnTable; j++)
+//        {
+//            double time = tableRACE2->item(i,j)->text().toDouble();
 
-            if(time < tabBestTime[j])
-            {
-                tabBestTimeCoord[j] = i;
-                tabBestTime[j] = time;
+//            if(time < tabBestTime[j])
+//            {
+//                tabBestTimeCoord[j] = i;
+//                tabBestTime[j] = time;
 
-                tabTime[i][j] = tableRACE2->item(i,j)->text()/*.toDouble()*/;
-            }
+//                tabTime[i][j] = tableRACE2->item(i,j)->text()/*.toDouble()*/;
+//            }
 
-        }
-    }
+//        }
+//    }
 
-    //    for(int i=0; i<rowTable; i++)
-    //    {
-    //        for(int j=0;j<columnTable;j++)
-    //        {
-    //            qDebug() << "ij" << i<<j<<tabTime[i][j];
-    //        }
-    //    }
-}
+//    //    for(int i=0; i<rowTable; i++)
+//    //    {
+//    //        for(int j=0;j<columnTable;j++)
+//    //        {
+//    //            qDebug() << "ij" << i<<j<<tabTime[i][j];
+//    //        }
+//    //    }
+//}
 
 void MainWindow::generateFile()
 {
@@ -890,30 +937,30 @@ void MainWindow::generateFile()
     //        }
     //    }
 
-    QPrinter printer;
+    //    QPrinter printer;
 
-//    QPrintDialog *dialog = new QPrintDialog(&printer, this);
-//    dialog->setWindowTitle(tr("Print Document"));
-//    dialog->exec();
+    //    QPrintDialog *dialog = new QPrintDialog(&printer, this);
+    //    dialog->setWindowTitle(tr("Print Document"));
+    //    dialog->exec();
 
-    QPrintDialog dialog(&printer);
+    //    QPrintDialog dialog(&printer);
 
-    if(dialog.exec() == QDialog::Accepted)
+    //    if(dialog.exec() == QDialog::Accepted)
     {
-        QPainter painter(&printer);
+        //        QPainter painter(&printer);
 
-//                painter.begin(&printer);
-//                double xscale = printer.pageRect().width()/double(tableRACE2->width());
-//                double yscale = printer.pageRect().height()/double(tableRACE2->height());
-//                double scale = qMin(xscale, yscale);
-//                painter.translate(printer.paperRect().x() + printer.pageRect().width()/2,
-//                                  printer.paperRect().y() + printer.pageRect().height()/2);
-//                painter.scale(scale, scale);
-//                painter.translate(-width()/2, height()/2);
+        //                painter.begin(&printer);
+        //                double xscale = printer.pageRect().width()/double(tableRACE2->width());
+        //                double yscale = printer.pageRect().height()/double(tableRACE2->height());
+        //                double scale = qMin(xscale, yscale);
+        //                painter.translate(printer.paperRect().x() + printer.pageRect().width()/2,
+        //                                  printer.paperRect().y() + printer.pageRect().height()/2);
+        //                painter.scale(scale, scale);
+        //                painter.translate(-width()/2, height()/2);
 
-//                tableRACE2->render(&painter);
+        //                tableRACE2->render(&painter);
 
-        tableRACE2->render(&painter);
+        //        tableRACE2->render(&painter);
     }
 
 }
